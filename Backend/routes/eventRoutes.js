@@ -1,15 +1,28 @@
 const express = require('express');
 const authMiddleware = require('../middleware/authMiddleware');
 const router = express.Router();
-const { createEvent, getEventsByUser, getEventById, getAllEvents,updateEvent, deleteEvent } = require('../controllers/eventController');
+const { createEvent, getEventsByUser, getEventById, getAllEvents, updateEvent, deleteEvent } = require('../controllers/eventController');
 const Event = require('../models/Event');
 const multer = require('multer');
+
+// Configure Multer for file upload
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, './uploads'); // Upload directory
+  },
+  filename: function (req, file, cb) {
+    cb(null, `${Date.now()}_${file.originalname}`);
+  }
+});
+
+// Initialize Multer upload
+const upload = multer({ storage: storage });
 
 // Route to get events created by the logged-in user (this must come before any dynamic routes like '/:id')
 router.get('/my-events', authMiddleware, getEventsByUser);
 
-// Route to create a new event
-router.post('/', authMiddleware, createEvent);
+// Route for creating event with file upload (use upload.single for single file upload)
+router.post('/', authMiddleware, upload.single('eventImage'), createEvent);
 
 // Route to get all events
 router.get('/', getAllEvents);
@@ -21,7 +34,7 @@ router.get('/:id', getEventById);
 router.put('/:id', authMiddleware, updateEvent);
 
 // Route to delete an event
-router.delete('/:id', authMiddleware, deleteEvent); 
+router.delete('/:id', authMiddleware, deleteEvent);
 
 // RSVP route
 router.post('/:id/rsvp', authMiddleware, async (req, res) => {
@@ -52,19 +65,5 @@ router.post('/:id/rsvp', authMiddleware, async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
-
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, './uploads'); // Upload directory
-  },
-  filename: function (req, file, cb) {
-    cb(null, `${Date.now()}_${file.originalname}`);
-  }
-});
-
-// Route for creating event with file upload (use upload.single for single file upload)
-router.post('/', authMiddleware, upload.single('eventImage'), createEvent);
-
-const upload = multer({ storage: storage });
 
 module.exports = router;

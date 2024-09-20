@@ -6,6 +6,7 @@ const EventSchema = new mongoose.Schema({
   date: { type: Date, required: true },
   location: { type: String, required: true },
   maxAttendees: { type: Number, required: true },
+  eventType: String,
   image: { type: String }, // Path to uploaded image
   creator: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
 });

@@ -4,17 +4,21 @@ exports.createEvent = async (req, res) => {
   const { title, description, date, location, maxAttendees } = req.body;
 
   try {
+    // Create a new event object
     const event = new Event({
       title,
       description,
       date,
       location,
       maxAttendees,
-      creator: req.user.id,
+      creator: req.user.id, // Use the logged-in user ID as the event creator
+      image: req.file ? req.file.path : null, // Save the file path if the file is uploaded
     });
+ // Save the event to the database
+ await event.save();
 
-    await event.save();
-    res.json(event);
+      // Respond with the created event
+    res.status(200).json({ message: 'Event created successfully', event });
   } catch (error) {
     console.error(error.message);
     res.status(500).send('Server Error');
@@ -84,3 +88,16 @@ exports.deleteEvent = async (req, res) => {
     }
   };
   
+  // controllers/eventController.js
+  exports.getEventsByUser = async (req, res) => {
+    try {
+      // Fetch events created by the logged-in user
+      const events = await Event.find({ creator: req.user.id }); // Filter by the logged-in user's ID
+      res.json(events); // Send back the events as JSON
+    } catch (error) {
+      console.error(error.message);
+      res.status(500).send('Server Error');
+    }
+  };
+
+
